@@ -12,7 +12,9 @@ var sparkPool;
 var sparkLength = 50;
 var sparkSpeed = 1;
 var sparkCreationSpeed = .01; //in seconds
+var sparkLifeTime = 1.5 //in seconds
 var timer = 0;
+var glowThickness = 4;
 
 window.onload = function(){
   canvas = document.getElementById("myCanvas");
@@ -47,8 +49,12 @@ function createSpark(){
   var endX = -(sparkLength/2) + Math.random() * sparkLength;
   var endY = -(sparkLength/2) + Math.random() * sparkLength;
 
-  var speedX = -(sparkSpeed/2) + Math.random() * sparkSpeed;
-  var speedY = -(sparkSpeed/2) + Math.random() * sparkSpeed;
+  //var speedX = -(sparkSpeed/2) + Math.random() * sparkSpeed;
+  //var speedY = -(sparkSpeed/2) + Math.random() * sparkSpeed;
+
+  var speedX = endX / 15;
+  var speedY = endY / 15;
+
 
 
   sparkPool.create(emitter.x, emitter.y, endX, endY, speedX, speedY);
@@ -77,11 +83,14 @@ function Spark(){
     this.speedX = speedX;
     this.speedY = speedY;
     this.time = 0;
+    //console.log("Created spark at (" + x1 + "," + y1 + "), (" +x2 + "," + y2 + ") with speed (" + speedX + "," + speedY + ")");
     spark = new createjs.Shape();
-    //updateSpark();
-    spark.graphics.setStrokeStyle(2);
-    spark.graphics.beginStroke("yellow")
-    spark.graphics.moveTo(this.x1, this.y1).lineTo(this.x1 + this.x2, this.y1 + this.y2).endStroke();
+
+
+
+      spark.graphics.beginStroke("yellow");
+      spark.graphics.setStrokeStyle(1);
+      spark.graphics.moveTo(this.x1, this.y1).lineTo(this.x1 + this.x2, this.y1 + this.y2).endStroke();
     stage.addChild(spark);
   }
 
@@ -89,7 +98,7 @@ function Spark(){
     this.time += dt;
     //console.log("Time " + this.time);
     spark.graphics.clear();
-    if(this.time > 2 * 1000){
+    if(this.time > sparkLifeTime * 1000){
       console.log("Spark Died");
       stage.removeChild(spark);
       this.inUse = false;
@@ -97,25 +106,19 @@ function Spark(){
 
     //spark.graphics.clear();
     this.x1 += (this.speedX *dt);
-    this.x2 += (this.speedX *dt);
+    //this.x2 += (this.speedX *dt);
     this.y1 += (this.speedY *dt);
-    this.y2 += (this.speedY *dt);
-    spark.graphics.setStrokeStyle(2);
-    spark.graphics.beginStroke("yellow")
+    //this.y2 += (this.speedY *dt);
+    spark.graphics.setStrokeStyle(1);
+    spark.graphics.beginStroke("yellow");
+
     spark.graphics.moveTo(this.x1, this.y1).lineTo(this.x1 + this.x2, this.y1 + this.y2).endStroke();
 
-  }
-
-  function updateSpark(){
-    //spark.graphics.clear();
-    spark.graphics.setStrokeStyle(2);
-    spark.graphics.beginStroke("yellow")
-    spark.graphics.moveTo(this.x1, this.y1).lineTo(this.x1 + this.x2, this.y1 + this.y2).endStroke();
   }
 }
 
 function SparkPool(){
-  var size = 200;
+  var size = 100;
   var pool = [];
   var lastAccessed = 0;
 
@@ -127,15 +130,18 @@ function SparkPool(){
 
   this.create = function(x1, y1, x2, y2, speedX, speedY){
     //Find the first empty element
-
     for(var i = 0; i <= size; i++){
-      if(!pool[i + lastAccessed%size].inUse){
-        pool[i + lastAccessed%size].init(x1, y1, x2, y2, speedX, speedY);
-        lastAccessed = i + lastAccessed;
-        console.log("Created spark");
+
+      if(pool[(i + lastAccessed) % size] === undefined){
+        console.log("pool[" + (i + lastAccessed%size)+ "] is undefined. i = " + i + ", lastAccessed = "+ lastAccessed );
+      }
+      if(!pool[(i + lastAccessed)%size].inUse){
+        pool[(i + lastAccessed) % size].init(x1, y1, x2, y2, speedX, speedY);
+        lastAccessed = (i + lastAccessed) % size;
+        //console.log("Created spark at " + i + ", last accessed is " + lastAccessed);
         break;
       } else {
-        console.log(i + " is in use");
+        //console.log(i + " is in use");
       }
     }
   }
